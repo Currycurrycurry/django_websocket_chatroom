@@ -1,0 +1,200 @@
+{% load static %}
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Kira Kira Chatting Room</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="{% static "assets/css/main.css" %}" />
+	</head>
+	<body class="is-preload">
+
+		<!-- Header -->
+			<section id="header">
+				<header>
+					<span class="image avatar"><img src="{% static "images/tmp01.jpg" %}" alt="" /></span>
+					<h1 id="logo">
+						<div class="col-12">
+							<ul class="actions">
+								<li><input type="text" name="user_name" id="user_name" style="color:#888;width: 150px;" placeholder="Mira" value="Mira" /></li>
+								<li><input type="button" class="primary" value="Submit" onclick="submit_name()"/></li>
+							</ul>
+						</div>
+					</h1>
+					<p>歩いていこう！
+					</p>
+				</header>
+				<nav id="nav">
+					<ul>
+						<li><a href="#one" class="active">Online Users</a></li>
+						<!-- <li><a href="#two">Private Chat</a></li> -->
+						<li><a href="#three">Group Chat</a></li>
+						<!-- <li><a href="#four">Anonymous Chat</a></li> -->
+					</ul>
+				</nav>
+				<footer>
+					<ul class="icons">
+						<li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
+						<li><a href="#" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
+						<li><a href="#" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
+						<li><a href="#" class="icon brands fa-github"><span class="label">Github</span></a></li>
+						<li><a href="#" class="icon solid fa-envelope"><span class="label">Email</span></a></li>
+					</ul>
+				</footer>
+			</section>
+
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				<!-- Main -->
+					<div id="main">
+
+						<!-- One -->
+							<section id="one">
+								<div class="image main" data-position="center">
+									<img src="{% static "images/banner.jpg" %}" alt="" />
+								</div>
+								<div class="container">
+									<header class="major">
+										<h2>Kira Kira Chatting Room</h2>
+										<p>Welcome to Kira Kira Chatting Room ⁄(⁄ ⁄ ⁄ω⁄ ⁄ ⁄)⁄
+										</p>
+									</header>
+									
+								</div>
+							</section>
+
+				
+
+						<!-- Three -->
+							<section id="three">
+								<div class="container">
+									<h3>Group Chat</h3>
+									
+							
+									<div class="row gtr-uniform">
+										<div class="col-8" name="group_history_message" id="group_history_message" style="overFlow-y:scroll;" ></div> 
+										<div class="col-4" name="user_list" id="user_list" style="overFlow-y:scroll;" ></div>
+										<div class="col-12"><textarea name="group_message" id="group_message" placeholder="Message" rows="1"></textarea></div>
+										<div class="col-12">
+											<ul class="actions">	
+												<li><input type="button" class="primary" value="Send Message" onclick="send()"/></li>
+											</ul>
+										</div>
+									</div>
+								</div>
+							</section>
+
+			
+					</div>
+
+				<!-- Footer -->
+					<section id="footer">
+						<div class="container">
+							<ul class="copyright">
+								<li>&copy; Untitled. All rights reserved.</li>
+							</ul>
+						</div>
+					</section>
+
+			</div>
+
+		<!-- Scripts -->
+			<script src="{% static "assets/js/jquery.min.js" %}" ></script>
+			<script src="{% static "assets/js/jquery.scrollex.min.js" %}" ></script>
+			<script src="{% static "assets/js/jquery.scrolly.min.js" %}" ></script>
+			<script src="{% static "assets/js/browser.min.js" %}" ></script>
+			<script src="{% static "assets/js/breakpoints.min.js" %}" ></script>
+			<script src="{% static "assets/js/util.js" %}" ></script>
+			<script src="{% static "assets/js/main.js" %}" ></script>
+			<script>
+				const USER_MSG = 0;
+				const TXT_MSG = 1;
+				const REVISE_MSG = 2;
+				var ws, user_id, user_name;
+				// var user_name = $("#user_name").val()
+				var names=['Arisa','Saaya','Ao','Sakura','Neru', 'Yukina', 'Kasumi'];
+				
+				window.onload = function () {
+					var ran=Math.floor(Math.random()*names.length);
+					$("#user_name").val(names[ran]+new Date().getTime()) 
+					if ("WebSocket" in window) {
+						ws = new WebSocket("ws://127.0.01:8008/chat/");
+			
+						ws.onopen = function() {
+							// ws.send(user_name)
+							user_name = $("#user_name").val()
+				
+							ws.send("test_" + user_name)
+						}
+						
+						ws.onmessage = function (evt) {
+							var received_msg = evt.data;
+							msg = eval("(" + received_msg + ")")
+							// only for group chat
+							// first login
+							if (msg.type == USER_MSG) {
+								if (msg.user_id != null) {
+								user_id = msg.user_id
+								// show the userid on the page?
+								}
+
+								$("#user_list").empty()
+								for (var i = 0; i < msg.user_list.length; i++) {
+									$("#user_list").append(msg.user_list[i] + "<hr/>")
+								}
+							}
+
+							if (msg.type == TXT_MSG) {
+								var nowDate = new Date();
+								now_time = nowDate.toLocaleString();
+					
+								new_msg = "";
+
+								if (user_id == msg.data.user_id) {
+									new_msg =  "<span style='color:pink'>" + msg.data.user_name + ":" + now_time + "<br />" + msg.data.msg + "</span>" + "<br />";
+							
+								} else {
+									new_msg = "<span >" + msg.data.user_name + ":" + now_time + "<br />" + msg.data.msg + "</span>" + "<br />";
+								}
+						
+								$("#group_history_message").append(
+									new_msg
+								)
+							}
+						};
+
+						ws.onclose = function () {
+							alert("connect closed");
+						}
+					} else {
+						alert("not support web socket!");
+					}
+				}
+
+				function send() {
+					msg_txt = $("#group_message").val()
+					msg = {
+						txt:msg_txt,
+						user_from:user_id
+					}
+					$.post("/msg_send/", msg, function(){
+						$("#group_message").val("")
+						$("#group_message").focus()
+					})
+				}
+
+				function submit_name() {
+					user_name = $("#user_name").val()
+					msg = {
+						user_name:user_name,
+						user_from:user_id
+					}
+					$.post("/change_name/", msg, function(){
+						$("#user_name").attr("readonly","readonly")
+					})
+				}
+			</script>
+
+	</body>
+</html>

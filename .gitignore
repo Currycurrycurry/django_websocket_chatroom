@@ -1,0 +1,7 @@
+.vscode/
+.DS_Store
+db
+/ChatRoom/templates/backup.html
+__pycache__/
+static/
+settings.py
