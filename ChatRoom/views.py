@@ -14,6 +14,7 @@ def to_chat(request):
 
 clients = {}
 client_names_dict = dict()
+
 @accept_websocket
 def chat(request):
     print("server: enter the websocket")
@@ -30,7 +31,7 @@ def chat(request):
                 print(msg)
                 msg, user_name = msg.split("_")
                 if msg == "test":
-                    print("客户端链接成功："+userid)
+                    print("client ok："+userid)
                     client_names_dict[userid] = user_name
                     request.websocket.send(json.dumps({"type":USER_MSG,"user_list":list(client_names_dict.values()), "user_id":userid, "user_name":user_name}).encode("'utf-8'"))
                     for client in clients:
@@ -38,7 +39,7 @@ def chat(request):
     if userid in clients:
         del clients[userid]
         del client_names_dict[userid]
-        print(userid + "离线")
+        print(userid + "offline")
         for client in clients:
             clients[client].send(
                 json.dumps({"type": USER_MSG, "user_list": list(client_names_dict.values()), "user": None}).encode("'utf-8'"))
